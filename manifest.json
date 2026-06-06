@@ -3,6 +3,14 @@
   "name": "ChatGPT RTL Toggle",
   "version": "1.0.0",
   "description": "Adds a button to each ChatGPT response to toggle text direction between RTL and LTR.",
+  "icons": {
+    "16": "icon.png",
+    "48": "icon.png",
+    "128": "icon.png"
+  },
+  "action": {
+    "default_icon": "icon.png"
+  },
   "content_scripts": [
     {
       "matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"],
