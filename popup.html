@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="popup.css" />
+    <title>ChatGPT RTL Toggle</title>
+  </head>
+  <body>
+    <header class="head">
+      <img src="icon.png" alt="" width="28" height="28" />
+      <h1>RTL Toggle</h1>
+    </header>
+
+    <label class="row" for="autoRtl">
+      <span class="row-text">
+        <span class="row-title">Auto RTL</span>
+        <span class="row-desc"
+          >Automatically switch Persian/Arabic-dominant responses to
+          right-to-left.</span
+        >
+      </span>
+      <span class="switch">
+        <input type="checkbox" id="autoRtl" />
+        <span class="slider"></span>
+      </span>
+    </label>
+
+    <p class="foot">
+      You can still flip any single message with the button under it.
+    </p>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
