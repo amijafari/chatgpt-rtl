@@ -26,6 +26,17 @@
     );
   }
 
+  // The prose of a message, excluding code blocks — code is LTR by nature and
+  // shouldn't drag the overall direction decision toward LTR.
+  // Use textContent, not innerText: it's layout-independent and available as
+  // soon as the node exists, so detection is deterministic regardless of when
+  // (or whether) the element is rendered.
+  function proseText(content) {
+    const clone = content.cloneNode(true);
+    clone.querySelectorAll("pre, code").forEach((el) => el.remove());
+    return clone.textContent || "";
+  }
+
   // Decide a direction from text, or null when there's no strong signal.
   function detectDirection(text) {
     const rtl = (text.match(RTL_RE) || []).length;
@@ -46,10 +57,29 @@
       ".";
   }
 
+  // Code/pre blocks are almost always LTR even inside an RTL message, and a
+  // container `dir="rtl"` would otherwise flip them. Pin each block to the
+  // direction of its own content (defaulting to LTR when there's no RTL text).
+  function fixCodeBlocks(content) {
+    content.querySelectorAll("pre").forEach((pre) => {
+      const dir = detectDirection(pre.textContent || "") || "ltr";
+      pre.setAttribute("dir", dir);
+      pre.style.textAlign = dir === "rtl" ? "right" : "left";
+    });
+  }
+
+  function clearCodeBlocks(content) {
+    content.querySelectorAll("pre").forEach((pre) => {
+      pre.removeAttribute("dir");
+      pre.style.textAlign = "";
+    });
+  }
+
   function applyDirection(messageEl, dir, isManual) {
     const content = getContentEl(messageEl);
     content.setAttribute("dir", dir);
     content.style.textAlign = dir === "rtl" ? "right" : "left";
+    fixCodeBlocks(content);
     messageEl.setAttribute(STATE_ATTR, dir);
     if (isManual) {
       messageEl.setAttribute(MANUAL_ATTR, "1");
@@ -66,6 +96,7 @@
     const content = getContentEl(messageEl);
     content.removeAttribute("dir");
     content.style.textAlign = "";
+    clearCodeBlocks(content);
     messageEl.removeAttribute(STATE_ATTR);
     messageEl.removeAttribute(AUTO_ATTR);
     updateButtonLabel(messageEl, currentDirection(messageEl));
@@ -84,9 +115,13 @@
   function autoApply(messageEl) {
     if (!autoEnabled) return;
     if (messageEl.getAttribute(MANUAL_ATTR) === "1") return;
-    const dir = detectDirection(getContentEl(messageEl).innerText || "");
+    const content = getContentEl(messageEl);
+    const dir = detectDirection(proseText(content));
     if (!dir) return;
-    if (currentDirection(messageEl) !== dir) applyDirection(messageEl, dir, false);
+    // Always apply, even when the container's native dir="auto" already resolves
+    // to `dir`. Otherwise we'd skip fixCodeBlocks and the code blocks (which
+    // ChatGPT hard-codes to LTR) would never get pinned to their real direction.
+    applyDirection(messageEl, dir, false);
   }
 
   function addButton(messageEl) {
@@ -151,7 +186,18 @@
         continue;
       }
       for (const node of m.addedNodes) {
-        if (node.nodeType === 1) scan(node);
+        if (node.nodeType !== 1) continue;
+        if (
+          node.matches('[data-message-author-role="assistant"]') ||
+          node.querySelector('[data-message-author-role="assistant"]')
+        ) {
+          scan(node); // a new assistant message
+        } else {
+          // Content inserted into an existing message (e.g. a code block that
+          // rendered after our first pass) — re-evaluate that message.
+          const host = node.closest('[data-message-author-role="assistant"]');
+          if (host) autoApply(host);
+        }
       }
     }
   });
