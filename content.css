@@ -1,0 +1,33 @@
+/* ChatGPT RTL Toggle button */
+
+.rtl-toggle-btn {
+  display: block;
+  margin-top: 8px;
+  margin-inline-start: auto; /* push to the end of the row, no overlap */
+
+  font-size: 11px;
+  line-height: 1;
+  font-family: inherit;
+  font-weight: 500;
+
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(127, 127, 127, 0.35);
+  background: rgba(127, 127, 127, 0.12);
+  color: inherit;
+  cursor: pointer;
+
+  opacity: 0.35;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+
+/* Fade in fully on hover so it stays unobtrusive otherwise. */
+[data-message-author-role="assistant"]:hover .rtl-toggle-btn,
+.rtl-toggle-btn:focus-visible {
+  opacity: 0.85;
+}
+
+.rtl-toggle-btn:hover {
+  opacity: 1 !important;
+  background: rgba(127, 127, 127, 0.25);
+}
